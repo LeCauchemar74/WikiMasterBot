@@ -1,0 +1,44 @@
+{
+  "manifest_version": 3,
+  "name": "WikiMasters Pack Hunter",
+  "version": "2.7.0",
+  "description": "WikiMasters Pack Hunter v2.7 — ouverture privée idempotente et prévention des onglets WikiMasters en double.",
+  "permissions": [
+    "storage",
+    "windows"
+  ],
+  "host_permissions": [
+    "https://www.wiki-masters.com/*",
+    "https://wiki-masters.com/*",
+    "https://10minutemail.com/*"
+  ],
+  "action": {
+    "default_title": "WikiMasters Pack Hunter",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.wiki-masters.com/*",
+        "https://wiki-masters.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://10minutemail.com/*"
+      ],
+      "js": [
+        "email.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "incognito": "spanning"
+}
