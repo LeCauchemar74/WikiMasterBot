@@ -49,7 +49,7 @@
         sourceWindowId: await getWindowId()
       });
     } catch (error) {
-      console.warn("[WikiMasters Pack Hunter] Impossible d'envoyer l'adresse temporaire :", error);
+      (()=>{})("[WikiMasters Pack Hunter] Impossible d'envoyer l'adresse temporaire :", error);
     }
   }
 
@@ -113,7 +113,7 @@
         sourceWindowId: await getWindowId()
       });
     } catch (error) {
-      console.warn("[WikiMasters Pack Hunter] Impossible d'envoyer le code OTP :", error);
+      (()=>{})("[WikiMasters Pack Hunter] Impossible d'envoyer le code OTP :", error);
     }
   }
 
