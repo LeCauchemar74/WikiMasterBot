@@ -812,7 +812,7 @@
 
         resetForNavigation();
       } catch (error) {
-        console.error("[WikiMasters Pack Hunter] DOM init error", error);
+        (()=>{})("[WikiMasters Pack Hunter] DOM init error", error);
       }
     };
 
@@ -824,7 +824,7 @@
   }
 
   init().catch(err => {
-    console.error("[WikiMasters Pack Hunter]", err);
+    (()=>{})("[WikiMasters Pack Hunter]", err);
     setStatus("Erreur d'initialisation");
   });
 })();
