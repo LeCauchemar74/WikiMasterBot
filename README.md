@@ -7,7 +7,7 @@ Extension Chrome (Manifest V3) pour assister la navigation et l'ouverture de paq
 > Le projet est conçu pour un usage local et personnel. La vérification affichée sur `/pull` reste une **action manuelle** : l'extension n'essaie pas de contourner une protection anti-bot ou une vérification de type CAPTCHA/Turnstile.
 
 ![Chrome](https://img.shields.io/badge/Chrome-Manifest%20V3-4285F4?logo=googlechrome&logoColor=white)
-![Version](https://img.shields.io/badge/version-2.7.0-orange)
+![Version](https://img.shields.io/badge/version-3.0.0-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ## ✨ Fonctionnalités
@@ -168,13 +168,14 @@ Vérifie que les deux onglets sont dans la **même fenêtre** et que l'accès en
 
 ## 📦 Version
 
-Version actuelle : **2.8.0**
+Version actuelle : **3.0.0**
 
 Historique synthétique :
 - `v2.4` : amélioration de l'initialisation des onglets privés ;
 - `v2.5` : fiabilisation de l'ouverture de la fenêtre privée ;
 - `v2.6` : ajout de la fermeture des fenêtres privées depuis le popup ;
-- `v2.7` : suppression du double déclenchement de création d'onglet et protection contre les doublons `/signup`.
+- `v2.7` : suppression du double déclenchement de création d'onglet et protection contre les doublons `/signup`;
+- `v3.0` : affichage progressif du prix moyen sous chaque carte, jusqu’à 3 requêtes simultanées, cache local et nouvelle tentative au rechargement pour les prix temporairement indisponibles.
 
 Voir [`CHANGELOG.md`](CHANGELOG.md) pour l'historique détaillé.
 
