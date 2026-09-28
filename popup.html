@@ -9,14 +9,27 @@
 <body>
   <main>
     <h1>WikiMasters Pack Hunter</h1>
+    <p id="privateAccess" role="status">Vérification de l’accès privé…</p>
     <p id="site">Vérification de la page…</p>
     <div id="status">—</div>
     <div id="packs">Packs parcourus : —</div>
-    <section class="market-box"><h2>Prix du marché</h2><div id="marketStats">Chargement…</div><button id="clearMarketCache" class="secondary" type="button">Vider le cache des prix</button></section>
     <button id="toggle" disabled>Chargement…</button>
     <button id="closeIncognito" class="danger" type="button">Fermer toutes les fenêtres privées</button>
     <div id="closeIncognitoStatus" aria-live="polite"></div>
 
+    <section class="settings">
+      <h2>Donner les cartes du compte connecté</h2>
+      <label for="tradeTarget">Pseudo exact du compte destinataire</label>
+      <input id="tradeTarget" type="text" maxlength="24" autocomplete="off" placeholder="Pseudo de ton compte principal">
+      <p class="hint">Depuis le compte qui donne : demande d’ami, attente de ton acceptation, puis offres de toutes les cartes disponibles (100 maximum par offre). Aucune carte ni monnaie demandée. Garde cet onglet ouvert.</p>
+      <button id="tradeStart" type="button">Ajouter en ami puis proposer les cartes</button>
+      <button id="tradeTest" class="secondary" type="button">Tester l’envoi d’une seule carte</button>
+      <p class="hint">Ce test envoie une vraie offre avec une carte disponible, puis s’arrête.</p>
+      <button id="tradeStop" class="secondary" type="button">Arrêter les prochains envois</button>
+      <div id="tradeStatus" role="status" aria-live="polite">Prêt.</div>
+      <button id="tradeChecked" class="secondary" type="button">Envoi vérifié sur le site — débloquer</button>
+      <p class="hint">Après une erreur d’envoi, vérifie les offres dans Échanges → Envoyées avant de débloquer.</p>
+    </section>
     <section class="settings">
       <h2>Timers</h2>
       <label>Détection / polling <output id="pollMsOut"></output> ms<input id="pollMs" type="range" min="20" max="1000" step="10"></label>

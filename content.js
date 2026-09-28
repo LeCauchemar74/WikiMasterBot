@@ -40,6 +40,50 @@
   let startupUserGestureAt = 0;
 
   const state = { status: "Repos", packs: 0 };
+  let tradeRunner = null;
+  let tradeBusy = false;
+  let tradeStatus = 'Prêt.';
+
+  async function tradeRequest(path, body) {
+    const response = await fetch(path, {
+      method: body ? 'POST' : 'GET', credentials: 'same-origin', cache: 'no-store',
+      headers: {'Content-Type':'application/json', 'x-wiki-calendar-tz':Intl.DateTimeFormat().resolvedOptions().timeZone},
+      ...(body ? {body:JSON.stringify(body)} : {}), signal:AbortSignal.timeout(20000)
+    });
+    const label = (body ? 'POST ' : 'GET ') + path.split('?')[0] + ' — HTTP ' + response.status;
+    const count = Array.isArray(body?.items) ? ' — ' + body.items.length + ' carte(s)' : '';
+    const data = await response.json().catch(() => { throw new Error(label + count + ' : réponse non JSON. Vérifie la connexion et les offres envoyées.'); });
+    if (!response.ok) {
+      const detail = [data.error, data.message, data.code].filter(v => typeof v === 'string').join(' / ').slice(0,600);
+      throw new Error(label + count + ' : ' + (detail || 'requête refusée sans détail'));
+    }
+    return data;
+  }
+
+  function startTrade(username, testOne = false) {
+    if (tradeBusy) throw new Error('Un échange est déjà en cours dans cet onglet.');
+    if (!username || username.length < 3 || username.length > 24) throw new Error('Saisis le pseudo exact (3 à 24 caractères).');
+    if (!navigator.locks) throw new Error('Le navigateur ne permet pas de verrouiller les envois.');
+    tradeBusy = true;
+    tradeStatus = 'Démarrage…';
+    tradeRunner = new WMPHTradeRunner({
+      request:tradeRequest, report:text => { tradeStatus = text; }, sleep,
+      journal:{
+        get:async key => (await chrome.storage.local.get(key))[key],
+        set:(key,value) => chrome.storage.local.set({[key]:value}),
+        remove:key => chrome.storage.local.remove(key)
+      }
+    });
+    navigator.locks.request('wmph-card-transfer', {ifAvailable:true}, async lock => {
+      if (!lock) throw new Error('Un autre onglet prépare déjà un échange.');
+      settings.enabled = false;
+      clearScheduled();
+      await saveSettings();
+      setStatus('Packs arrêtés — échange en cours');
+      await tradeRunner.run(username, {testOne});
+    }).catch(error => { tradeStatus = (tradeRunner.sent ? tradeRunner.sent + ' carte(s) déjà proposée(s). ' : '') + error.message; })
+      .finally(() => { tradeBusy = false; });
+  }
 
   const sleep = ms => new Promise(resolve => setTimeout(resolve, Math.max(0, Number(ms) || 0)));
   const normalize = s => (s || "").replace(/\s+/g, " ").trim();
@@ -399,7 +443,7 @@
   async function waitForPackResult(timeout = 12000) {
     const start = Date.now();
     while (Date.now() - start < timeout) {
-      if (!inPulls || !settings.enabled || halted) return false;
+      if (tradeBusy || !inPulls || !settings.enabled || halted) return false;
       if (legendaryFound() || viewerIsOpen()) return true;
       await sleep(settings.pollMs);
     }
@@ -408,7 +452,7 @@
 
   async function inspectCurrentCard() {
     await sleep(settings.viewDelay);
-    if (!inPulls || !settings.enabled || halted) return false;
+    if (tradeBusy || !inPulls || !settings.enabled || halted) return false;
     if (legendaryFound()) { stopOnLegendary(); return false; }
 
     const more = findMoreCardsButton();
@@ -436,10 +480,10 @@
   }
 
   async function runLoop() {
-    if (busy || !inPulls || !settings.enabled || halted) return;
+    if (tradeBusy || busy || !inPulls || !settings.enabled || halted) return;
     busy = true;
     try {
-      while (inPulls && settings.enabled && !halted) {
+      while (!tradeBusy && inPulls && settings.enabled && !halted) {
         if (legendaryFound()) { stopOnLegendary(); break; }
 
         if (viewerIsOpen()) {
@@ -547,6 +591,36 @@
 
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (!msg || msg.type !== "wmph") return;
+    if (msg.action === 'tradeState') {
+      sendResponse({busy:tradeBusy, status:tradeStatus}); return;
+    }
+    if (msg.action === 'tradeClear') {
+      (async () => {
+        if (tradeBusy) throw new Error('Attends la fin de l’opération.');
+        const username = String(msg.username || '').trim();
+        const users = (await tradeRequest('/api/friends/search?q=' + encodeURIComponent(username))).users;
+        const matches = (users || []).filter(u => u.username?.toLowerCase() === username.toLowerCase());
+        if (matches.length !== 1) throw new Error('Pseudo exact introuvable.');
+        const target = matches[0].id;
+        const rows = (await tradeRequest('/api/friends')).friendships;
+        const relation = rows?.find(f => f.requester_id === target || f.addressee_id === target);
+        if (!relation) throw new Error('Amitié introuvable.');
+        const source = relation.requester_id === target ? relation.addressee_id : relation.requester_id;
+        await chrome.storage.local.remove('wmph_trade_uncertain_' + source);
+        tradeStatus = 'Envoi vérifié manuellement. Tu peux relancer.';
+        sendResponse({ok:true});
+      })().catch(error => sendResponse({ok:false,error:error.message}));
+      return true;
+    }
+    if (msg.action === 'tradeStart') {
+      try { startTrade(String(msg.username || '').trim(), msg.testOne === true); sendResponse({ok:true}); }
+      catch (error) { sendResponse({ok:false,error:error.message}); }
+      return;
+    }
+    if (msg.action === 'tradeStop') {
+      if (tradeRunner) tradeRunner.stopped = true;
+      sendResponse({ok:true}); return;
+    }
     if (msg.action === "fillOtp") {
       const filled = fillOtp(msg.code);
       sendResponse({filled});
@@ -812,7 +886,7 @@
 
         resetForNavigation();
       } catch (error) {
-        (()=>{})("[WikiMasters Pack Hunter] DOM init error", error);
+        console.error("[WikiMasters Pack Hunter] DOM init error", error);
       }
     };
 
@@ -824,9 +898,7 @@
   }
 
   init().catch(err => {
-    (()=>{})("[WikiMasters Pack Hunter]", err);
+    console.error("[WikiMasters Pack Hunter]", err);
     setStatus("Erreur d'initialisation");
   });
 })();
-
-// v2.8 market price support

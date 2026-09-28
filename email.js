@@ -15,6 +15,8 @@
   let lastMessage = null;
   let lastAddress = null;
   let pollTimer = null;
+  let addressSending = false;
+  let codeSending = false;
 
   const normalize = s => (s || "").replace(/\s+/g, " ").trim();
   const sleep = ms => new Promise(r => setTimeout(r, Math.max(0, Number(ms) || 0)));
@@ -39,18 +41,19 @@
   }
 
   async function sendAddress(address) {
-    if (!address || address === lastAddress) return;
-    lastAddress = address;
-    await sleep(settings.signupFillDelay);
+    if (!address || address === lastAddress || addressSending) return;
+    addressSending = true;
     try {
-      await chrome.runtime.sendMessage({
+      await sleep(settings.signupFillDelay);
+      const result = await chrome.runtime.sendMessage({
         type: "wmph_email_address",
         email: address,
         sourceWindowId: await getWindowId()
       });
+      if (result?.ok && result.sent > 0) lastAddress = address;
     } catch (error) {
-      (()=>{})("[WikiMasters Pack Hunter] Impossible d'envoyer l'adresse temporaire :", error);
-    }
+      console.warn("[WikiMasters Pack Hunter] Impossible d'envoyer l'adresse temporaire :", error);
+    } finally { addressSending = false; }
   }
 
   function getMessageBlocks() {
@@ -100,21 +103,21 @@
   }
 
   async function sendCode(code, messageId) {
-    if (!code || code === lastCode && messageId === lastMessage) return;
-    lastCode = code;
-    lastMessage = messageId;
-    await sleep(settings.emailFillDelay);
+    if (!code || code === lastCode && messageId === lastMessage || codeSending) return;
+    codeSending = true;
 
     try {
-      await chrome.runtime.sendMessage({
+      await sleep(settings.emailFillDelay);
+      const result = await chrome.runtime.sendMessage({
         type: "wmph_email_code",
         code,
         messageId,
         sourceWindowId: await getWindowId()
       });
+      if (result?.ok && result.sent > 0) { lastCode = code; lastMessage = messageId; }
     } catch (error) {
-      (()=>{})("[WikiMasters Pack Hunter] Impossible d'envoyer le code OTP :", error);
-    }
+      console.warn("[WikiMasters Pack Hunter] Impossible d'envoyer le code OTP :", error);
+    } finally { codeSending = false; }
   }
 
   async function getWindowId() {

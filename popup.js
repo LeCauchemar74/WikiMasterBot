@@ -1,4 +1,10 @@
 const $ = s => document.querySelector(s);
+chrome.extension.isAllowedIncognitoAccess(allowed => {
+  $('#privateAccess').textContent = allowed
+    ? 'Navigation privée autorisée — Ctrl + Maj + N ouvre les deux sites.'
+    : 'Navigation privée NON autorisée : extensions → Pack Hunter → Détails → Autoriser en navigation privée. Puis ouvre une nouvelle fenêtre avec Ctrl + Maj + N.';
+  $('#privateAccess').style.color = allowed ? '#4ade80' : '#fbbf24';
+});
 const DEFAULTS = {enabled:true,pollMs:120,actionDelay:250,viewDelay:180,retryDelay:500,navigationDelay:150,emailPollMs:500,emailFillDelay:150,signupFillDelay:150,signupSubmitDelay:150,signupButtonPollMs:75,signupButtonTimeoutMs:15000,otpSubmitDelay:150};
 let currentSettings = {...DEFAULTS};
 
@@ -77,6 +83,66 @@ $("#reset").addEventListener("click", async () => {
 
 refresh();
 
+const tradeSend = async (action, extra={}) => {
+  const result = await send(action, extra);
+  if (!result) throw new Error('Recharge l’onglet WikiMasters après la mise à jour de l’extension.');
+  if (result.ok === false) throw new Error(result.error);
+  return result;
+};
+let tradeUiError = '';
+let targetEdited = false;
+async function refreshTrade() {
+  try {
+    const state = await tradeSend('tradeState');
+    $('#tradeStatus').textContent = tradeUiError || state.status;
+    $('#tradeStart').disabled = state.busy;
+    $('#tradeTest').disabled = state.busy;
+    $('#tradeChecked').disabled = state.busy;
+    $('#tradeTarget').disabled = state.busy;
+  } catch (error) {
+    $('#tradeStatus').textContent = 'Ouvre un onglet WikiMasters connecté et recharge-le si nécessaire.';
+  }
+}
+chrome.storage.local.get('wmph_trade_target').then(data => {
+  if (!targetEdited) $('#tradeTarget').value = data.wmph_trade_target || '';
+});
+$('#tradeTarget').addEventListener('input', () => {
+  targetEdited = true;
+  tradeUiError = '';
+});
+$('#tradeStart').addEventListener('click', async () => {
+  tradeUiError = '';
+  const username = $('#tradeTarget').value.trim();
+  try {
+    await chrome.storage.local.set({wmph_trade_target:username});
+    await tradeSend('tradeStart', {username});
+    await refreshTrade();
+  } catch (error) { tradeUiError = error.message; $('#tradeStatus').textContent = tradeUiError; }
+});
+$('#tradeStop').addEventListener('click', async () => {
+  tradeUiError = '';
+  try { await tradeSend('tradeStop'); await refreshTrade(); }
+  catch (error) { tradeUiError = error.message; $('#tradeStatus').textContent = tradeUiError; }
+});
+$('#tradeTest').addEventListener('click', async () => {
+  tradeUiError = '';
+  const username = $('#tradeTarget').value.trim();
+  try {
+    await chrome.storage.local.set({wmph_trade_target:username});
+    await tradeSend('tradeStart', {username, testOne:true});
+    await refreshTrade();
+  } catch (error) { tradeUiError = error.message; $('#tradeStatus').textContent = tradeUiError; }
+});
+$('#tradeChecked').addEventListener('click', async () => {
+  tradeUiError = '';
+  try {
+    await tradeSend('tradeClear', {username:$('#tradeTarget').value.trim()});
+    await refreshTrade();
+  } catch (error) { tradeUiError = error.message; $('#tradeStatus').textContent = tradeUiError; }
+});
+refreshTrade();
+setInterval(refreshTrade, 1000);
+
 $("#closeIncognito").addEventListener("click", async () => {
   const status = $("#closeIncognitoStatus");
   const button = $("#closeIncognito");
@@ -100,6 +166,3 @@ $("#closeIncognito").addEventListener("click", async () => {
     button.disabled = false;
   }
 });
-
-async function refreshMarketStats(){try{const d=await chrome.storage.local.get("wmph_market_cache"),e=Object.values(d.wmph_market_cache||{}),n=Date.now(),fresh=e.filter(x=>x?.average!=null&&n-(x.updatedAt||0)<90*60*1000).length;document.querySelector("#marketStats").textContent=e.length?fresh+" prix à jour · "+e.length+" cartes en cache":"Aucun prix en cache"}catch{document.querySelector("#marketStats").textContent="Cache indisponible"}}
-document.querySelector("#clearMarketCache").addEventListener("click",async()=>{const b=document.querySelector("#clearMarketCache");b.disabled=true;try{await chrome.storage.local.remove("wmph_market_cache");const t=await activeTab();if(t?.id)await chrome.tabs.sendMessage(t.id,{type:"wmph",action:"marketCacheCleared"}).catch(()=>{});document.querySelector("#marketStats").textContent="Cache vidé"}finally{b.disabled=false}});refreshMarketStats();

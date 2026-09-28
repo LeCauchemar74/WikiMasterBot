@@ -38,7 +38,7 @@ async function closeAllIncognitoWindows() {
       await chrome.windows.remove(win.id);
       closed++;
     } catch (error) {
-      (() => {})(`[WikiMasters Pack Hunter] Impossible de fermer la fenêtre privée ${win.id} :`, error);
+      console.warn(`[WikiMasters Pack Hunter] Impossible de fermer la fenêtre privée ${win.id} :`, error);
     }
   }
 
@@ -105,7 +105,7 @@ async function openPrivateTabs(windowId) {
 
     handledWindows.add(windowId);
   } catch (error) {
-    (() => {})("[WikiMasters Pack Hunter] Impossible de configurer la fenêtre privée :", error);
+    console.warn("[WikiMasters Pack Hunter] Impossible de configurer la fenêtre privée :", error);
   } finally {
     configuringWindows.delete(windowId);
   }
@@ -132,7 +132,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   closeAllIncognitoWindows()
     .then(closed => sendResponse({ok: true, closed}))
     .catch(error => {
-      (() => {})("[WikiMasters Pack Hunter] Erreur fermeture fenêtres privées :", error);
+      console.warn("[WikiMasters Pack Hunter] Erreur fermeture fenêtres privées :", error);
       sendResponse({ok: false, error: String(error)});
     });
 
@@ -164,18 +164,18 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       let sent = 0;
       for (const tab of targets) {
         try {
-          await chrome.tabs.sendMessage(tab.id, {
+          const result = await chrome.tabs.sendMessage(tab.id, {
             type: "wmph",
             action: "fillOtp",
             code: String(msg.code)
           });
-          sent++;
+          if (result?.filled === true) sent++;
         } catch {}
       }
 
       sendResponse({ok:true, sent});
     } catch (error) {
-      (() => {})("[WikiMasters Pack Hunter] Erreur transfert OTP :", error);
+      console.warn("[WikiMasters Pack Hunter] Erreur transfert OTP :", error);
       sendResponse({ok:false, error:String(error)});
     }
   })();
@@ -210,18 +210,18 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       let sent = 0;
       for (const tab of targets) {
         try {
-          await chrome.tabs.sendMessage(tab.id, {
+          const result = await chrome.tabs.sendMessage(tab.id, {
             type: "wmph",
             action: "fillSignup",
             email: String(msg.email),
             delay: msg.delay
           });
-          sent++;
+          if (result?.filled === true) sent++;
         } catch {}
       }
       sendResponse({ok:true, sent});
     } catch (error) {
-      (() => {})("[WikiMasters Pack Hunter] Erreur transfert adresse :", error);
+      console.warn("[WikiMasters Pack Hunter] Erreur transfert adresse :", error);
       sendResponse({ok:false, error:String(error)});
     }
   })();
