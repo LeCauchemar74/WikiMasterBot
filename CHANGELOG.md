@@ -1,5 +1,19 @@
 # Changelog
 
+## [3.0.0] - 2026-09-28
+
+### Ajouté
+- Balise de prix dynamique directement sous chaque carte de la collection.
+- Affichage progressif du prix moyen du marché carte par carte.
+- Jusqu’à 3 requêtes marché exécutées en parallèle.
+- Nouvelle tentative au rechargement pour les cartes marquées « Prix temporairement indisponible ».
+
+### Modifié
+- Bridge React isolé dans un content script MAIN pour récupérer les UUID des cartes.
+- Cache local des prix conservé pendant 90 minutes.
+- Nouvelle tentative après erreurs réseau, 429 et 5xx.
+- Suppression des sorties console émises par l’extension.
+
 ## [2.8.0] - 2026-09-28
 
 ### Ajouté
