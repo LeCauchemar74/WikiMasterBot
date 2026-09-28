@@ -20,6 +20,11 @@ Extension Chrome (Manifest V3) pour assister la navigation et l'ouverture de paq
 - Détection d'une carte légendaire et arrêt de l'automatisation lorsqu'une légendaire est trouvée.
 - Affichage de l'état et du nombre de paquets parcourus dans le popup.
 
+### Prix du marché
+- Sur `/collection`, récupération des UUID React des cartes visibles et affichage discret du prix moyen du marché.
+- Cache local de 90 minutes avec requêtes espacées.
+- Bouton du popup pour vider le cache des prix.
+
 ### Gestion des fenêtres privées
 - Détection de la création d'une fenêtre privée.
 - Initialisation d'un onglet 10MinuteMail et d'un onglet WikiMasters.
@@ -43,6 +48,8 @@ Le projet est volontairement simple :
 WikiMasters Pack Hunter/
 ├── manifest.json       # Configuration de l'extension Chrome
 ├── background.js       # Service worker : fenêtres privées, messages et onglets
+├── market-bridge.js    # Pont MAIN world : récupération des UUID React
+├── market.js            # Affichage et cache des prix du marché
 ├── content.js          # Logique WikiMasters : routes, packs, cartes, inscription
 ├── email.js            # Lecture de 10MinuteMail et récupération du code
 ├── popup.html          # Interface du popup
@@ -161,7 +168,7 @@ Vérifie que les deux onglets sont dans la **même fenêtre** et que l'accès en
 
 ## 📦 Version
 
-Version actuelle : **2.7.0**
+Version actuelle : **2.8.0**
 
 Historique synthétique :
 - `v2.4` : amélioration de l'initialisation des onglets privés ;
