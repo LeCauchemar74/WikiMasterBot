@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "WikiMasters Pack Hunter",
-  "version": "2.7.0",
-  "description": "WikiMasters Pack Hunter v2.7 — ouverture privée idempotente et prévention des onglets WikiMasters en double.",
+  "version": "2.8.0",
+  "description": "WikiMasters Pack Hunter v2.8 — ouverture privée, chasse aux packs et affichage du prix moyen du marché.",
   "permissions": [
     "storage",
     "windows"
@@ -23,6 +23,7 @@
         "https://wiki-masters.com/*"
       ],
       "js": [
+        "market-bridge.js",
         "content.js"
       ],
       "run_at": "document_start"
