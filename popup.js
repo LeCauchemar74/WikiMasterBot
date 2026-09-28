@@ -100,3 +100,6 @@ $("#closeIncognito").addEventListener("click", async () => {
     button.disabled = false;
   }
 });
+
+async function refreshMarketStats(){try{const d=await chrome.storage.local.get("wmph_market_cache"),e=Object.values(d.wmph_market_cache||{}),n=Date.now(),fresh=e.filter(x=>x?.average!=null&&n-(x.updatedAt||0)<90*60*1000).length;document.querySelector("#marketStats").textContent=e.length?fresh+" prix à jour · "+e.length+" cartes en cache":"Aucun prix en cache"}catch{document.querySelector("#marketStats").textContent="Cache indisponible"}}
+document.querySelector("#clearMarketCache").addEventListener("click",async()=>{const b=document.querySelector("#clearMarketCache");b.disabled=true;try{await chrome.storage.local.remove("wmph_market_cache");const t=await activeTab();if(t?.id)await chrome.tabs.sendMessage(t.id,{type:"wmph",action:"marketCacheCleared"}).catch(()=>{});document.querySelector("#marketStats").textContent="Cache vidé"}finally{b.disabled=false}});refreshMarketStats();
