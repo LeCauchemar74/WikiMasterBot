@@ -38,7 +38,7 @@ async function closeAllIncognitoWindows() {
       await chrome.windows.remove(win.id);
       closed++;
     } catch (error) {
-      console.warn(`[WikiMasters Pack Hunter] Impossible de fermer la fenêtre privée ${win.id} :`, error);
+      (() => {})(`[WikiMasters Pack Hunter] Impossible de fermer la fenêtre privée ${win.id} :`, error);
     }
   }
 
@@ -105,7 +105,7 @@ async function openPrivateTabs(windowId) {
 
     handledWindows.add(windowId);
   } catch (error) {
-    console.warn("[WikiMasters Pack Hunter] Impossible de configurer la fenêtre privée :", error);
+    (() => {})("[WikiMasters Pack Hunter] Impossible de configurer la fenêtre privée :", error);
   } finally {
     configuringWindows.delete(windowId);
   }
@@ -132,7 +132,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   closeAllIncognitoWindows()
     .then(closed => sendResponse({ok: true, closed}))
     .catch(error => {
-      console.warn("[WikiMasters Pack Hunter] Erreur fermeture fenêtres privées :", error);
+      (() => {})("[WikiMasters Pack Hunter] Erreur fermeture fenêtres privées :", error);
       sendResponse({ok: false, error: String(error)});
     });
 
@@ -175,7 +175,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
       sendResponse({ok:true, sent});
     } catch (error) {
-      console.warn("[WikiMasters Pack Hunter] Erreur transfert OTP :", error);
+      (() => {})("[WikiMasters Pack Hunter] Erreur transfert OTP :", error);
       sendResponse({ok:false, error:String(error)});
     }
   })();
@@ -221,7 +221,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       }
       sendResponse({ok:true, sent});
     } catch (error) {
-      console.warn("[WikiMasters Pack Hunter] Erreur transfert adresse :", error);
+      (() => {})("[WikiMasters Pack Hunter] Erreur transfert adresse :", error);
       sendResponse({ok:false, error:String(error)});
     }
   })();
