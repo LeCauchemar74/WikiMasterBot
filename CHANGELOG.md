@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.8.0] - 2026-09-28
+
+### Ajouté
+- Prix moyen du marché sur les cartes visibles de `/collection`.
+- Bridge MAIN world pour récupérer les UUID React des cartes.
+- Cache local de 90 minutes et requêtes espacées.
+- Section « Prix du marché » et bouton de vidage du cache dans le popup.
+
+### Modifié
+- Version du manifeste portée à 2.8.0.
+- Documentation mise à jour.
+
+# Changelog
+
 ## [2.7.0] - 2026-09-25
 
 ### Modifié
