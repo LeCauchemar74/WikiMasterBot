@@ -828,3 +828,5 @@
     setStatus("Erreur d'initialisation");
   });
 })();
+
+// v2.8 market price support
